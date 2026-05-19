@@ -2,6 +2,7 @@
 //! The ISA is a RISC with big endian.
 
 const std = @import("std");
+const mmix_instructions = @import("mmix_instructions.zig");
 
 /// The register class stores the value of a single register and allows correct conversion from value to bytes.
 /// This is required because the host machine of the vm is little endian while mmix operates in big endian.
@@ -27,19 +28,11 @@ const Register = struct {
     }
 };
 
-/// An instruction of MMIX is composed of OP and 3 bytes which can be used to refer to one of the 256 register
-/// or to construct a number of 2/3 bytes.
-/// For example: ADD $X,$Y,$Z means set the register number $X to the sum of registers $Y and $Z.
-/// Or: JMP @+4*XYZ means to jump to next instruction by skipping XYZ tetrabytes.
-const Instruction = packed struct {
-    op: u8,
-    x: u8,
-    y: u8,
-    z: u8,
-};
-
 /// Represent a machine which can execute MMIX instructions.
 const VM = struct {
     registers: [256]Register = .{Register{ .value = 0 }} ** 256,
-    instructions: std.ArrayList(Instruction),
+    instructions: std.ArrayList(mmix_instructions.Instruction),
+
+    // Note: access to the memory M_t[x] requires to ignore the lg(t) least significan bits of x,
+    // to access the aligned memory based on the word size.
 };
